@@ -74,3 +74,9 @@ LibraryService 只返回候选卡片；StudyListService.create/generate 仅在�
 ## 构建验证
 
 最低检查为 `npm run build`。功能检查包括 `npm run check:library`、`node scripts/check-review.mjs` 和 `npm run test:server`。Electron 安装包由 `npm run dist:win` 生成，但打包需要额外下载 Electron/NSIS 资源。
+
+## Android 迁移设计
+
+Android 不是重写一套业务 UI，而是把已经验证的 React/Vite 页面放入安全的 Android WebView 壳。Gradle 的 `buildWeb` 和 `syncWebAssets` 保证 APK 使用当前源码构建结果；Android 原生只提供页面加载、外链处理、TextToSpeech 和 API 配置桥。
+
+账号请求使用 Android 专用 bearer 会话：页面来源固定为 `https://appassets.androidplatform.net`，服务端仅接受带 `X-Wordflow-Client: android` 的受控来源并返回 CORS 允许头。令牌不写 localStorage、不进入 SQLite，应用进程结束后需要重新登录。

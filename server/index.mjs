@@ -62,16 +62,33 @@ export async function createApi(config = {}) {
     try {
       const path = new URL(req.url, 'http://local').pathname;
       const route = `${req.method} ${path}`;
+      const clientType = String(req.headers['x-wordflow-client'] ?? '');
+      const requestOrigin = String(req.headers.origin ?? '');
+      const androidOrigin = requestOrigin === 'https://appassets.androidplatform.net';
+      const android = clientType === 'android' && androidOrigin;
+      if (androidOrigin) {
+        res.setHeader('Access-Control-Allow-Origin', requestOrigin);
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Wordflow-Client, Authorization');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
+        res.setHeader('Vary', 'Origin');
+        if (req.method === 'OPTIONS') {
+          const method = String(req.headers['access-control-request-method'] ?? '');
+          const headers = String(req.headers['access-control-request-headers'] ?? '').toLowerCase().split(',').map(h => h.trim()).filter(Boolean);
+          if (!['GET', 'POST', 'PATCH'].includes(method) || headers.some(h => !['content-type', 'x-wordflow-client', 'authorization'].includes(h))) throw new ApiError(403, '不支持的跨域请求');
+          if (!routes.has(`${method} ${path}`)) throw new ApiError(404, '接口不存在');
+          return reply(204, {});
+        }
+      }
       if (!routes.has(route)) { req.resume(); throw new ApiError(404, '接口不存在'); }
       const peer = req.socket.remoteAddress ?? '';
       const loopback = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(peer);
       // 仅信任本机Nginx覆盖的X-Real-IP，不信任公网直传头。
       const clientIp = trustProxy && loopback ? String(req.headers['x-real-ip'] ?? peer).slice(0, 64) : peer;
       limiter.hit(`all:${clientIp}`, 180, 60_000);
-      const desktop = req.headers['x-wordflow-client'] === 'desktop' && !req.headers.origin;
-      if (req.headers.origin && req.headers.origin !== origin) throw new ApiError(403, '不允许的请求来源');
+      const desktop = (clientType === 'desktop' && !req.headers.origin) || android;
+      if (!android && req.headers.origin && req.headers.origin !== origin) throw new ApiError(403, '不允许的请求来源');
       if (!['GET', 'HEAD'].includes(req.method) && !desktop && req.headers.origin !== origin) throw new ApiError(403, '请从应用页面发起请求');
-      if (req.headers['sec-fetch-site'] === 'cross-site') throw new ApiError(403, '不允许的请求来源');
+      if (!android && req.headers['sec-fetch-site'] === 'cross-site') throw new ApiError(403, '不允许的请求来源');
       if (route === 'GET /api/health') return reply(200, { ok: true });
       const rawToken = desktop ? String(req.headers.authorization ?? '').replace(/^Bearer /, '') : (req.headers.cookie ?? '').split(';').map(part => part.trim()).find(part => part.startsWith(`${COOKIE}=`))?.slice(COOKIE.length + 1);
       const session = rawToken && rawToken.length <= 100 ? db.prepare('SELECT * FROM sessions WHERE token_hash = ? AND expires_at > ?').get(tokenHash(rawToken), Date.now()) : undefined;

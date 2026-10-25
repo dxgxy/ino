@@ -9,6 +9,7 @@ export async function speak(card: WordCard): Promise<void> {
   if (card.audioUrl) {
     try { audio = new Audio(card.audioUrl); await audio.play(); return; } catch { /* 离线时使用系统语音。 */ }
   }
+  if (window.AndroidTTS?.speak?.(card.content, 'en-US')) return;
   if (!window.speechSynthesis) throw new Error('当前设备没有可用的语音服务');
   const speech = new SpeechSynthesisUtterance(card.content);
   speech.lang = 'en-US';

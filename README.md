@@ -72,3 +72,11 @@ npm run test:server
 ## 数据与隐私
 
 客户端学习数据默认不上传。账号后端只保存必要的账号资料、密码哈希和会话；原始密码、学习卡片、List、复习明细、词库、音频和本地数据库不会提交到 Git。请勿将 `server/data/wordflow.sqlite` 或任何 `.env` 文件上传。
+
+## Android 迁移
+
+Android 版本位于 `D:\ino_Android` 的 `android-app` 项目目录，Git 分支为 `android/migrate`。它复用同一份 React/Vite 源码，Gradle 在构建前运行 `npm run build` 并把 `dist` 同步到 Android assets；因此不会维护第二份 UI 代码。
+
+Android 端使用原生 WebView，页面来源为 `https://appassets.androidplatform.net`，账号服务地址通过 `-PwordflowApiUrl=https://your-domain.example` 配置。调试模拟器默认使用 `http://10.0.2.2:8787`。
+
+原生发音链路为：词典音频 → Android TextToSpeech → Web Speech API。安卓 bearer 会话只留在当前页面内存，学习数据继续保存在本机。

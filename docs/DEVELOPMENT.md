@@ -70,3 +70,16 @@ set WORDFLOW_API_URL=https://your-domain.example
 4. 必要时设置 `ELECTRON_MIRROR` 和 `ELECTRON_BUILDER_BINARIES_MIRROR` 后重试。
 
 项目源码路径中含特殊字符时，使用仓库提供的 Node 脚本，不要直接调用 npm `.cmd` 里的二进制路径。
+
+## Android 使用
+
+打开 `D:\ino_Android\android-app`，或双击 Android Studio 快捷方式后选择该目录。命令行构建：
+
+```bat
+cd /d D:\ino_Android
+npm install
+cd android-app
+.\gradlew.bat assembleDebug -PwordflowApiUrl=http://10.0.2.2:8787
+```
+
+APK：`android-app\app\build\outputs\apk\debug\app-debug.apk`。生产构建必须传 HTTPS 地址；调试明文 HTTP 只用于本机模拟器。

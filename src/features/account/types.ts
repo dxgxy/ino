@@ -8,10 +8,12 @@ export interface AccountUser {
 }
 export type ProfileInput = Pick<AccountUser, 'nickname' | 'dailyGoal' | 'avatarColor'>;
 export type AccountOperation = 'me' | 'register' | 'login' | 'logout' | 'profile' | 'password';
-export interface AccountResponse { user?: AccountUser; ok?: boolean; error?: string }
+export interface AccountResponse { user?: AccountUser; ok?: boolean; error?: string; token?: string }
 
 declare global {
   interface Window {
+    AndroidConfig?: { apiBase: () => string };
+    AndroidTTS?: { speak: (text: string, lang?: string) => boolean };
     desktop?: {
       platform: string;
       isDesktop: boolean;

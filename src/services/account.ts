@@ -8,6 +8,8 @@ const routes: Record<AccountOperation, { method: string; path: string }> = {
   profile: { method: 'PATCH', path: '/api/account/profile' },
   password: { method: 'POST', path: '/api/account/password' },
 };
+let androidToken = '';
+function androidApiBase(): string { return window.AndroidConfig?.apiBase?.().replace(/\/$/, '') ?? ''; }
 export class AccountError extends Error {
   constructor(message: string, public status = 0) { super(message); }
 }
@@ -20,7 +22,7 @@ export interface AccountService {
   logout(): Promise<void>;
 }
 
-/** 网页使用同源Cookie；桌面凭据只经限定IPC送到主进程，渲染进程不接触会话令牌。 */
+/** 网页使用同源Cookie；桌面和Android令牌不进入localStorage，Android令牌仅保存在当前JS进程内存。 */
 async function request(operation: AccountOperation, payload?: Record<string, unknown>): Promise<AccountResponse> {
   try {
     const native = window.desktop?.accountRequest;
@@ -30,11 +32,17 @@ async function request(operation: AccountOperation, payload?: Record<string, unk
       return result.body;
     }
     const route = routes[operation];
-    const response = await fetch(route.path, { method: route.method, credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(operation === 'me' ? 3000 : 15_000),
+    const apiBase = androidApiBase();
+    const android = Boolean(apiBase);
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (android) { headers['X-Wordflow-Client'] = 'android'; if (androidToken) headers.Authorization = `Bearer ${androidToken}`; }
+    const endpoint = apiBase ? `${apiBase}${route.path}` : route.path;
+    const response = await fetch(endpoint, { method: route.method, credentials: android ? 'omit' : 'same-origin', headers, signal: AbortSignal.timeout(operation === 'me' ? 3000 : 15_000),
       ...(route.method !== 'GET' ? { body: JSON.stringify(payload ?? {}) } : {}) });
     const body = await response.json() as AccountResponse;
     if (!response.ok) throw new AccountError(body.error ?? '请求失败', response.status);
+    if (android && body.token) androidToken = body.token;
+    if (android && (operation === 'logout' || response.status === 401)) androidToken = '';
     return body;
   } catch (error) {
     if (error instanceof AccountError) throw error;

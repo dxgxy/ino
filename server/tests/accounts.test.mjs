@@ -90,3 +90,27 @@ test('production config rejects HTTP and issues Secure cookies behind HTTPS prox
   assert.equal(registered.status, 201); assert.ok(registered.cookie.includes('; Secure'));
   assert.throws(() => createAccountBridge('http://8.130.9.172'), /HTTPS/);
 });
+
+
+test('Android WebView bearer registration persists to SQLite', async t => {
+  const api = await start({ database: ':memory:' });
+  t.after(() => api.close());
+  const android = async (method, path, body, token = '') => {
+    const response = await fetch(api.base + path, { method, headers: { Origin: 'https://appassets.androidplatform.net', 'Content-Type': 'application/json', 'X-Wordflow-Client': 'android', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
+    return { status: response.status, body: await response.json(), headers: response.headers };
+  };
+  const preflight = await fetch(api.base + '/api/auth/register', { method: 'OPTIONS', headers: { Origin: 'https://appassets.androidplatform.net', 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'content-type,x-wordflow-client' } });
+  assert.equal(preflight.status, 204);
+  assert.equal(preflight.headers.get('access-control-allow-origin'), 'https://appassets.androidplatform.net');
+  const registered = await android('POST', '/api/auth/register', { username: 'android_user', nickname: '安卓同学', password });
+  assert.equal(registered.status, 201);
+  assert.ok(registered.body.token);
+  assert.equal(registered.body.user.nickname, '安卓同学');
+  const me = await android('GET', '/api/auth/me', undefined, registered.body.token);
+  assert.equal(me.status, 200);
+  assert.equal(me.body.user.username, 'android_user');
+  const row = api.db.prepare('SELECT username,nickname,password_hash FROM users WHERE username=?').get('android_user');
+  assert.equal(row.nickname, '安卓同学');
+  assert.ok(row.password_hash.startsWith('scrypt$32768$8$3$'));
+  assert.equal(api.db.prepare('SELECT count(*) total FROM sessions WHERE user_id=(SELECT id FROM users WHERE username=?)').get('android_user').total, 1);
+});
