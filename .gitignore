@@ -35,3 +35,5 @@ android-app/build/
 android-app/app/build/
 android-app/local.properties
 android-app/app/src/main/assets/web/
+android-app/.idea/
+android-app/gradle/gradle-daemon-jvm.properties
