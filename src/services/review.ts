@@ -5,6 +5,7 @@ export interface ReviewRecord {
   cardId: string; listId?: string; shortMark?: number; longMark?: number;
   shortDate?: string; longIncrementDate?: string; longDecayAt?: string;
   lastReviewedAt?: string; correct: number; wrong: number; attemptsToday?: number;
+  correctToday?: number; wrongToday?: number;
   dueAt: string; interval: number; ease: number; lapses: number; lastRating?: string;
 }
 export const schemes: { key: ReviewScheme; title: string; weight: number }[] = [
@@ -36,7 +37,9 @@ export function currentRecord(records: ReviewRecord[], cardId: string, listId: s
   const today = dayKey(now);
   return { ...r, shortMark: r.shortDate === today ? r.shortMark ?? settings.initialLong : r.longMark ?? settings.initialLong,
     longMark: r.longMark ?? settings.initialLong, shortDate: today,
-    attemptsToday: r.shortDate === today ? r.attemptsToday ?? 0 : 0 };
+    attemptsToday: r.shortDate === today ? r.attemptsToday ?? 0 : 0,
+    correctToday: r.shortDate === today ? r.correctToday ?? 0 : 0,
+    wrongToday: r.shortDate === today ? r.wrongToday ?? 0 : 0 };
 }
 export function putRecord(records: ReviewRecord[], record: ReviewRecord): ReviewRecord[] {
   return [...records.filter(r => r.cardId !== record.cardId || r.listId !== record.listId), record];
@@ -49,7 +52,7 @@ export function finishScheme(records: ReviewRecord[], listId: string, cardId: st
   return putRecord(records, { ...r, shortMark: a, longMark: (r.longMark ?? 0) + (promote ? 1 : 0),
     longIncrementDate: promote ? dayKey(now) : r.longIncrementDate,
     longDecayAt: success ? now.toISOString() : r.longDecayAt, lastReviewedAt: now.toISOString(),
-    attemptsToday: (r.attemptsToday ?? 0) + 1, correct: r.correct + Number(success), wrong: r.wrong + Number(!success),
+    attemptsToday: (r.attemptsToday ?? 0) + 1, correctToday: (r.correctToday ?? 0) + Number(success), wrongToday: (r.wrongToday ?? 0) + Number(!success), correct: r.correct + Number(success), wrong: r.wrong + Number(!success),
     lapses: r.lapses + Number(!success) });
 }
 export function pendingCards(cards: WordCard[], records: ReviewRecord[], listId: string, settings: ListReviewSettings, now = new Date()): WordCard[] {

@@ -12,6 +12,8 @@ import { ReviewPanel } from './features/review/ReviewPanel';
 import { currentRecord, putRecord, finishScheme, type ReviewScheme } from './services/review';
 import { DEFAULT_REVIEW_SETTINGS, type ListReviewSettings } from './services/studyLists';
 import { ListSettings } from './features/review/ListSettings';
+import type { AppView } from './services/dashboard';
+import { AndroidBottomNav, HomeDashboard } from './features/home/HomeDashboard';
 
 export default function App() {
   const auth = useAccount();
@@ -31,7 +33,7 @@ function Workspace({ auth }: { auth: AccountController }) {
   const [activeId, setActiveId] = useState(lists[0]?.id ?? '');
   const [selectedId, setSelectedId] = useState('');
   const [listRailCollapsed, setListRailCollapsed] = useState(false);
-  const [view, setView] = useState<'lists' | 'library' | 'account' | 'review'>('lists');
+  const [view, setView] = useState<AppView>('home');
   const [library, setLibrary] = useState<DictionaryLibrary | null>(null);
   const [libraryError, setLibraryError] = useState('');
   const [message, setMessage] = useState('');
@@ -47,6 +49,7 @@ function Workspace({ auth }: { auth: AccountController }) {
   useEffect(() => { const timer = setInterval(() => setClock(new Date()), 30000); return () => clearInterval(timer); }, []);
   const selectedRecord = active && (active.cards.find(card => card.id === selectedId) ?? active.cards[0]);
   const marks = active && selectedRecord ? currentRecord(data.reviewRecords, selectedRecord.id, active.id, settings, clock) : undefined;
+  const navigate = (next: AppView) => { setView(next); if (next === 'lists' || next === 'review') setShowCreate(false); };
   const updateSettings = (value: ListReviewSettings) => active && setData(current => ({ ...current, lists: current.lists.map(l => l.id === active.id ? { ...l, reviewSettings: value } : l) }));
   const reviewResult = (cardId: string, scheme: ReviewScheme, success: boolean) => {
     if (!active) return;
@@ -115,7 +118,7 @@ function Workspace({ auth }: { auth: AccountController }) {
     finally { setImporting(false); }
   };
 
-  return <div className={`shell ${listRailCollapsed ? 'shell-list-collapsed' : ''}`}>
+  return <div className={`shell ${listRailCollapsed ? 'shell-list-collapsed' : ''} ${view === 'home' ? 'shell-home' : ''}`}>
     <aside className="sidebar list-sidebar">
       <div className="brand"><div className="brand-mark">知</div><div className="brand-copy"><strong>xx大人</strong><span>WordFlow</span></div><button className="rail-toggle" title={listRailCollapsed ? '展开 List 栏' : '收起 List 栏'} aria-label={listRailCollapsed ? '展开 List 栏' : '收起 List 栏'} onClick={() => setListRailCollapsed(value => !value)}>{listRailCollapsed ? <PanelLeftOpen size={16}/> : <PanelLeftClose size={16}/>}</button></div>
       <div className="list-title"><span>我的 List · {lists.length}</span><button className="mini-icon" title="新建 List" onClick={() => { setView('lists'); setShowCreate(true); }}><FolderPlus size={17}/></button></div>
@@ -135,7 +138,7 @@ function Workspace({ auth }: { auth: AccountController }) {
       </header>
       {(initial.error || storageError || libraryError) && <p role="alert" className="error-line">{initial.error || storageError || libraryError}</p>}
       {message && <div role="status" className="notice">{message}<button title="关闭提示" onClick={() => setMessage('')}><X size={14}/></button></div>}
-      {view === 'account' ? <AccountPanel auth={auth} listCount={lists.length} reviewedCount={reviewed.length} onBack={() => setView('lists')}/> : view === 'review' ? <ReviewPanel key={active?.id ?? 'empty'} list={active} records={data.reviewRecords} settings={settings} onSettings={updateSettings} onResult={reviewResult} onBack={() => setView('lists')}/> : <>
+      {view === 'home' ? <HomeDashboard user={auth.user} online={auth.status === 'online'} lists={lists} records={data.reviewRecords} library={library} now={clock} onList={(id, review = false) => { setActiveId(id); setSelectedId(''); setView(review ? 'review' : 'lists'); }} onNavigate={navigate}/> : view === 'extensions' ? <section className="extensions-page"><h2>扩展模块</h2><p>这里预留社区、宠物、等级、同步、统计与商业化接口。</p><button className="primary" onClick={() => setView('home')}>返回首页</button></section> : view === 'account' || view === 'settings' ? <AccountPanel auth={auth} listCount={lists.length} reviewedCount={reviewed.length} onBack={() => setView('lists')}/> : view === 'review' ? <ReviewPanel key={active?.id ?? 'empty'} list={active} records={data.reviewRecords} settings={settings} onSettings={updateSettings} onResult={reviewResult} onBack={() => setView('lists')}/> : <>
       <fieldset className="workspace-controls" disabled={!!initial.error}>
       {showCreate && <section className="panel create-panel"><h3>创建属于你的 List</h3><form onSubmit={event => { event.preventDefault(); if (name.trim()) createLists([studyListService.create(name)]); }}>
         <label>List 名称<input autoFocus value={name} onChange={event => setName(event.target.value)} placeholder="例如：旅行前想掌握的词"/></label>
@@ -169,7 +172,7 @@ function Workspace({ auth }: { auth: AccountController }) {
         </>}
       </fieldset>
       </>}
-    </main>
-  </div>;
+    </main><AndroidBottomNav view={view} onNavigate={navigate}/></div>;
 }
+
 
