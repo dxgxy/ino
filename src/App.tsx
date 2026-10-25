@@ -174,5 +174,3 @@ function Workspace({ auth }: { auth: AccountController }) {
       </>}
     </main><AndroidBottomNav view={view} onNavigate={navigate}/></div>;
 }
-
-
