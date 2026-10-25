@@ -35,7 +35,7 @@ export function AccountPanel({ auth, listCount, reviewedCount, onBack }: Props) 
       <div className="account-promise"><BookOpen size={20}/><div><strong>离线也能继续学</strong><span>不登录，也可以建立自己的 List。</span></div></div>
     </aside><div className="account-card">
       {online && auth.user ? <>
-        <div className="profile-summary"><div className={`profile-avatar ${auth.user.avatarColor}`}>{auth.user.nickname.slice(0, 1)}</div><div><h2>{auth.user.nickname}</h2><p>@{auth.user.username} · 已登录</p></div></div>
+        <div className="profile-summary"><div className={`profile-avatar ${auth.user.avatarColor}`}>{auth.user.nickname.slice(0, 1)}</div><div><h2>{auth.user.nickname}</h2><p>@{auth.user.username} · 已登录</p></div></div><div className="account-verified"><ShieldCheck size={16}/> 安卓端账号已验证，资料已保存到后端 <button className="text-btn" disabled={busy} onClick={() => run(auth.reconnect, '重新验证成功')}>重新验证</button></div>
         <div className="profile-stats"><span><strong>{listCount}</strong>本机 List</span><span><strong>{reviewedCount}</strong>已复习词</span><span><strong>{auth.user.dailyGoal}</strong>每日目标</span></div>
         <form onSubmit={event => { event.preventDefault(); run(() => auth.saveProfile(profile), '个人资料已保存'); }}>
           <h3>个人资料</h3><label>昵称<input required minLength={1} maxLength={24} value={profile.nickname} onChange={e => setProfile({ ...profile, nickname: e.target.value })}/></label>
@@ -50,7 +50,7 @@ export function AccountPanel({ auth, listCount, reviewedCount, onBack }: Props) 
         </form></details><button className="text-btn account-logout" disabled={busy} onClick={() => run(auth.logout)}><LogOut size={15}/> 退出登录</button>
       </> : <>
         <div className="account-card-heading"><div className="account-lock"><UserRound size={23}/></div><h2>{tab === 'login' ? '欢迎回来' : '开始你的学习旅程'}</h2><p>{tab === 'login' ? '登录个人账号，继续自己的学习节奏。' : '只需账号、昵称和密码，不收集手机号。'}</p></div>
-        {auth.user && <p className="account-offline-note">当前展示 {auth.user.nickname} 的本地资料，云端身份尚未验证。重新登录可管理个人资料。</p>}
+        {auth.user && <p className="account-offline-note">当前展示 {auth.user.nickname} 的本地资料，云端身份尚未验证。<button className="text-btn" disabled={busy} onClick={() => run(auth.reconnect, '账号验证成功')}>验证账号并连接后端</button></p>}
         <div className="account-tabs"><button className={tab === 'login' ? 'active' : ''} disabled={busy} onClick={() => { setTab('login'); setError(''); setPassword(''); setConfirmPassword(''); }}>登录</button><button className={tab === 'register' ? 'active' : ''} disabled={busy} onClick={() => { setTab('register'); setError(''); setPassword(''); setConfirmPassword(''); }}>注册新账号</button></div>
         <form onSubmit={event => {
           event.preventDefault();

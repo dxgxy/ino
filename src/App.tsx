@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, BookOpen, Check, Folder, FolderPlus, ListChecks, Plus, Search, Trash2, Volume2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, BookOpen, Check, Folder, FolderPlus, ListChecks, PanelLeftClose, PanelLeftOpen, Plus, Search, Trash2, Volume2, X } from 'lucide-react';
 import type { WordCard } from './domain/types';
 import { libraryService, type DictionaryLibrary } from './services/library';
 import { loadLearningState, saveLearningState, studyListService, type UserList } from './services/studyLists';
@@ -30,6 +30,7 @@ function Workspace({ auth }: { auth: AccountController }) {
   const { lists, reviewed } = data;
   const [activeId, setActiveId] = useState(lists[0]?.id ?? '');
   const [selectedId, setSelectedId] = useState('');
+  const [listRailCollapsed, setListRailCollapsed] = useState(false);
   const [view, setView] = useState<'lists' | 'library' | 'account' | 'review'>('lists');
   const [library, setLibrary] = useState<DictionaryLibrary | null>(null);
   const [libraryError, setLibraryError] = useState('');
@@ -114,9 +115,9 @@ function Workspace({ auth }: { auth: AccountController }) {
     finally { setImporting(false); }
   };
 
-  return <div className="shell">
+  return <div className={`shell ${listRailCollapsed ? 'shell-list-collapsed' : ''}`}>
     <aside className="sidebar list-sidebar">
-      <div className="brand"><div className="brand-mark">知</div><div><strong>xx大人</strong><span>WordFlow</span></div></div>
+      <div className="brand"><div className="brand-mark">知</div><div className="brand-copy"><strong>xx大人</strong><span>WordFlow</span></div><button className="rail-toggle" title={listRailCollapsed ? '展开 List 栏' : '收起 List 栏'} aria-label={listRailCollapsed ? '展开 List 栏' : '收起 List 栏'} onClick={() => setListRailCollapsed(value => !value)}>{listRailCollapsed ? <PanelLeftOpen size={16}/> : <PanelLeftClose size={16}/>}</button></div>
       <div className="list-title"><span>我的 List · {lists.length}</span><button className="mini-icon" title="新建 List" onClick={() => { setView('lists'); setShowCreate(true); }}><FolderPlus size={17}/></button></div>
       <nav className="list-nav">{lists.map((list, index) => <div className="user-list-item" key={list.id}>
         <button className={view === 'lists' && active?.id === list.id ? 'list-nav-item active' : 'list-nav-item'} onClick={() => { setActiveId(list.id); setView('lists'); setSelectedId(''); setQuery(''); }}>
