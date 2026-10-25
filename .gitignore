@@ -1,0 +1,31 @@
+node_modules/
+dist/
+.npm-cache/
+*.local
+
+data-sources/
+
+.playwright-cli/
+output/playwright/
+*.tsbuildinfo
+
+output/library-check/
+
+server/data/
+.env
+.env.*
+output/server-tests/
+output/server-release/
+output/wordflow-api.tar.gz
+
+# Generated and local-only files
+.builder-cache/
+output/release/
+report-work/
+server/data/*.sqlite*
+# Local artifacts and generated reports
+output/
+report-work/
+.builder-cache/
+server/data/
+2026*.xml

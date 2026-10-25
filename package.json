@@ -1,0 +1,79 @@
+{
+  "name": "xx-daren-wordflow",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "node scripts/dev.cjs",
+    "dev:web": "node scripts/vite.cjs --host 127.0.0.1",
+    "dev:desktop": "node scripts/electron.cjs",
+    "build": "node scripts/build.cjs",
+    "desktop": "node scripts/electron.cjs",
+    "preview": "node scripts/vite.cjs preview",
+    "check:library": "node scripts/check-library.mjs",
+    "server": "node server/index.mjs",
+    "test:server": "node --test server/tests/*.test.mjs",
+    "package:server": "node scripts/package-server.mjs",
+    "dist:win": "node scripts/package-desktop.cjs"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "lucide-react": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "typescript": "latest",
+    "vite": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "concurrently": "latest",
+    "electron": "latest",
+    "electron-builder": "^26.15.3",
+    "wait-on": "latest"
+  },
+  "build": {
+    "appId": "com.xxdaren.wordflow",
+    "productName": "xx大人 WordFlow",
+    "directories": {
+      "output": "output/release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "portable": {
+      "artifactName": "${productName}-Portable-${version}.${ext}"
+    }
+  }
+}
+
+

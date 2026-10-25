@@ -1,0 +1,26 @@
+{
+  "name": "ECDICT",
+  "url": "https://github.com/skywind3000/ECDICT",
+  "distribution": "npm:ecdict@0.0.4",
+  "sha256": "d0ce61e560b50d9905d20de3173aa3ca80950ce235bedd21c53e025cf9f38cb0",
+  "license": "MIT",
+  "cardCount": 8560,
+  "books": [
+    {
+      "name": "常用英语",
+      "count": 3461
+    },
+    {
+      "name": "四级词汇",
+      "count": 3846
+    },
+    {
+      "name": "六级词汇",
+      "count": 5406
+    },
+    {
+      "name": "雅思词汇",
+      "count": 5040
+    }
+  ]
+}

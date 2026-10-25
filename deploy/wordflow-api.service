@@ -1,0 +1,30 @@
+[Unit]
+Description=WordFlow lightweight account API
+After=network.target
+
+[Service]
+Type=simple
+User=wordflow
+Group=wordflow
+WorkingDirectory=/opt/wordflow-api
+EnvironmentFile=/etc/wordflow-api.env
+# 按 command -v node 的输出修改。宝塔安装的Node不一定在/usr/bin。
+ExecStart=/usr/bin/node --max-old-space-size=96 server/index.mjs
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+MemoryHigh=160M
+MemoryMax=256M
+TasksMax=32
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+StateDirectory=wordflow
+StateDirectoryMode=0700
+UMask=0077
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
